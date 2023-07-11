@@ -14,8 +14,8 @@ const Part = ({ name, exercises }) => (
 
 const Content = ({ parts }) => (
   <>
-    {parts.map((part) => (
-      <Part key={part.id} name={part.name} exercises={part.exercises} />
+    {parts.map(({ id, name, exercises }) => (
+      <Part key={id} name={name} exercises={exercises} />
     ))}
   </>
 )
