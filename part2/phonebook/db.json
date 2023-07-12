@@ -19,6 +19,41 @@
       "name": "Mary Poppendieck",
       "number": "39-23-6423122",
       "id": 4
+    },
+    {
+      "name": "Barack Obama",
+      "number": "202-456-1111",
+      "id": 5
+    },
+    {
+      "name": "The Pope",
+      "number": "39-06-6982",
+      "id": 6
+    },
+    {
+      "name": "Dalai Lama",
+      "number": "91-1892-221343",
+      "id": 7
+    },
+    {
+      "name": "Santa Claus",
+      "number": "951-262-3062",
+      "id": 8
+    },
+    {
+      "name": "Bill Gates",
+      "number": "206-709-3100",
+      "id": 9
+    },
+    {
+      "name": "Tiger Woods",
+      "number": "904-285-3700",
+      "id": 10
+    },
+    {
+      "name": "Oprah Winfrey",
+      "number": "312-633-1182",
+      "id": 11
     }
   ]
 }

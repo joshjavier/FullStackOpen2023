@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import phonebookService from './services/phonebook'
 
 const Filter = ({ query, handleChange }) => {
   return (
@@ -40,14 +40,27 @@ const PersonForm = ({ newName, newNumber, handleChange, addPerson }) => {
   )
 }
 
-const Persons = ({ persons }) => {
+const Person = ({ id, name, number, deletePerson }) => {
+  return (
+    <li data-id={id}>
+      {name}
+      {number && `: ${number}`}
+      <button onClick={deletePerson}>delete</button>
+    </li>
+  )
+}
+
+const Persons = ({ persons, deletePerson }) => {
   return (
     <ul>
       {persons.map(({ id, name, number }) => (
-        <li key={id}>
-          {name}
-          {number && `: ${number}`}
-        </li>
+        <Person
+          key={id}
+          id={id}
+          name={name}
+          number={number}
+          deletePerson={deletePerson}
+        />
       ))}
     </ul>
   )
@@ -62,21 +75,61 @@ const App = () => {
   const addPerson = (e) => {
     e.preventDefault()
 
-    // Prevent the user from adding existing names in the phonebook
-    if (persons.some(({ name }) => name.trim() === newName.trim())) {
-      alert(`${newName} is already added to phonebook`)
+    // Allow users to update the number of existing contacts in the phonebook
+    const existingPerson = persons.find(
+      ({ name }) => name.trim() === newName.trim()
+    )
+    if (existingPerson) {
+      updatePerson(existingPerson, newNumber)
       return
     }
 
-    setPersons((p) =>
-      p.concat({
-        name: newName,
-        number: newNumber,
-        id: p.length + 1,
+    const newPerson = {
+      name: newName,
+      number: newNumber,
+      id: persons.length + 1,
+    }
+
+    // save new contact to the backend server
+    phonebookService.create(newPerson).then((returnedPerson) => {
+      // update state
+      setPersons(persons.concat(newPerson))
+      // clear input fields to prepare for new input
+      setNewName('')
+      setNewNumber('')
+    })
+  }
+
+  const deletePerson = (e) => {
+    const id = parseInt(e.target.parentElement.dataset.id)
+    const contact = persons.find((person) => person.id === id)
+
+    if (window.confirm(`Delete ${contact.name}?`)) {
+      // delete contact from the backend server
+      phonebookService.remove(id).then(() => {
+        // update state
+        const updatedPersons = persons.filter((person) => person.id !== id)
+        setPersons(updatedPersons)
       })
+    }
+  }
+
+  const updatePerson = (person, number) => {
+    const confirmed = window.confirm(
+      `${newName} is already added to phonebook, replace the old number with a new one?`
     )
-    setNewName('')
-    setNewNumber('')
+
+    if (confirmed) {
+      const updatedPerson = { ...person, number }
+      phonebookService
+        .update(person.id, updatedPerson)
+        .then((returnedPerson) => {
+          const updatedPersons = persons.map((person) =>
+            person.id === returnedPerson.id ? returnedPerson : person
+          )
+          setPersons(updatedPersons)
+        })
+    }
   }
 
   const handleChange = (e) => {
@@ -101,9 +154,9 @@ const App = () => {
         )
 
   useEffect(() => {
-    axios
-      .get('http://localhost:3001/persons')
-      .then((response) => setPersons(response.data))
+    phonebookService
+      .getAll()
+      .then((initialPersons) => setPersons(initialPersons))
   }, [])
 
   return (
@@ -120,7 +173,7 @@ const App = () => {
       />
 
       <h2>Numbers</h2>
-      <Persons persons={personsToShow} />
+      <Persons persons={personsToShow} deletePerson={deletePerson} />
     </div>
   )
 }
