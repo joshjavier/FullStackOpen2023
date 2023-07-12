@@ -17,11 +17,14 @@ const SearchBox = ({ query, handleChange }) => {
   )
 }
 
-const SearchResults = ({ countries }) => {
+const SearchResults = ({ countries, showCountry }) => {
   return (
     <ul>
       {countries.map((country) => (
-        <li key={country}>{country}</li>
+        <li key={country}>
+          {country}
+          <button onClick={showCountry(country)}>show</button>
+        </li>
       ))}
     </ul>
   )
@@ -54,6 +57,10 @@ const App = () => {
     setQuery(e.target.value)
   }
 
+  const showCountry = (countryName) => () => {
+    setQuery(countryName)
+  }
+
   const matchingCountries =
     query === ''
       ? countries
@@ -84,6 +91,7 @@ const App = () => {
       ) : tenOrLessMatches ? (
         <SearchResults
           countries={matchingCountries.map(({ name }) => name.common)}
+          showCountry={showCountry}
         />
       ) : onlyOneMatch ? (
         <Country
