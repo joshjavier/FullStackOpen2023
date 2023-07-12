@@ -1,0 +1,23 @@
+* {
+  box-sizing: border-box;
+}
+
+.notification {
+  font-weight: 700;
+  color: seagreen;
+  background-color: lightcyan;
+  border: 1px solid currentColor;
+  border-radius: 0.25em;
+  padding: 1em;
+  margin-block: 1em;
+  min-height: 56px;
+}
+
+.notification:empty {
+  visibility: hidden;
+}
+
+.notification[data-type='error'] {
+  color: firebrick;
+  background-color: lightpink;
+}

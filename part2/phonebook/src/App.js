@@ -66,11 +66,28 @@ const Persons = ({ persons, deletePerson }) => {
   )
 }
 
+const Notification = ({ message, type }) => {
+  return (
+    <div
+      id="notification"
+      className="notification"
+      data-type={type || 'info'}
+      role="alert"
+    >
+      {message}
+    </div>
+  )
+}
+
 const App = () => {
   const [persons, setPersons] = useState([])
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [query, setQuery] = useState('')
+  const [alert, setAlert] = useState({
+    message: '',
+    type: 'info',
+  })
 
   const addPerson = (e) => {
     e.preventDefault()
@@ -97,6 +114,7 @@ const App = () => {
       // clear input fields to prepare for new input
       setNewName('')
       setNewNumber('')
+      showAlert(`Added ${returnedPerson.name}`)
     })
   }
 
@@ -110,6 +128,7 @@ const App = () => {
         // update state
         const updatedPersons = persons.filter((person) => person.id !== id)
         setPersons(updatedPersons)
+        showAlert(`Removed ${contact.name} from phonebook`)
       })
     }
   }
@@ -128,8 +147,20 @@ const App = () => {
             person.id === returnedPerson.id ? returnedPerson : person
           )
           setPersons(updatedPersons)
+          showAlert(`Updated ${returnedPerson.name}'s number`)
+        })
+        .catch((error) => {
+          if (error.response.statusText === 'Not Found') {
+            const errorMsg = `Information of ${person.name} has already been removed from the server`
+            showAlert(errorMsg, 'error')
+          }
         })
     }
+  }
+
+  const showAlert = (message, type = 'info') => {
+    setAlert({ message, type })
+    setTimeout(() => setAlert({ message: '' }), 5000)
   }
 
   const handleChange = (e) => {
@@ -171,6 +202,7 @@ const App = () => {
         handleChange={handleChange}
         addPerson={addPerson}
       />
+      <Notification message={alert.message} type={alert.type} />
 
       <h2>Numbers</h2>
       <Persons persons={personsToShow} deletePerson={deletePerson} />
