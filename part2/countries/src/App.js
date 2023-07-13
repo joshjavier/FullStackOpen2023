@@ -17,7 +17,7 @@ const LoadingPlaceholder = ({ item }) => {
 const SearchBox = ({ query, handleChange }) => {
   return (
     <div>
-      <label htmlFor="country">find countries</label>
+      <label htmlFor="country">find countries</label>{' '}
       <input
         id="country"
         type="search"
@@ -57,11 +57,11 @@ const Country = ({ name, capital, area, languages, flag, weather }) => {
 
       <img src={flag.img} alt={flag.alt} />
 
-      {weather ? (
+      {weather && JSON.stringify(weather) !== '{}' ? (
         <Weather weather={weather} />
-      ) : (
+      ) : weather === null ? (
         <LoadingPlaceholder item="weather" />
-      )}
+      ) : null}
     </div>
   )
 }
@@ -78,17 +78,12 @@ const Weather = ({ weather: { city, temp, wind, icon, desc } }) => {
 }
 
 const App = () => {
+  // define state and variables
   const [countries, setCountries] = useState(null)
   const [query, setQuery] = useState('')
+  const [country, setCountry] = useState(null)
   const [weather, setWeather] = useState(null)
-
-  const handleChange = (e) => {
-    setQuery(e.target.value)
-  }
-
-  const showCountry = (countryName) => () => {
-    setQuery(countryName)
-  }
+  const [isShown, setIsShown] = useState(false)
 
   const matchingCountries =
     query === ''
@@ -97,12 +92,34 @@ const App = () => {
           name.common.toLowerCase().includes(query.toLowerCase())
         )
 
-  let tooManyMatches, tenOrLessMatches, onlyOneMatch
-  if (countries) {
-    tooManyMatches = query !== '' && matchingCountries.length > 10
-    tenOrLessMatches =
-      matchingCountries.length <= 10 && matchingCountries.length > 1
-    onlyOneMatch = matchingCountries.length === 1
+  // define event handlers
+  const handleChange = (e) => {
+    if (matchingCountries.length > 1) setIsShown(false)
+    setQuery(e.target.value)
+  }
+
+  const showCountry = (countryName) => () => {
+    const countryObj = countries.find(
+      (country) => country.name.common === countryName
+    )
+    setQuery(countryName)
+    selectCountry(countryObj)
+  }
+
+  // define functions for updating state
+  const selectCountry = (countryObj) => {
+    setCountry({
+      name: countryObj.name.common,
+      code: countryObj.cca2,
+      capital: countryObj.capital[0],
+      area: countryObj.area,
+      languages: Object.values(countryObj.languages),
+      flag: {
+        img: countryObj.flags.png,
+        alt: countryObj.flags.alt,
+      },
+    })
+    setIsShown(true)
   }
 
   const fetchCountries = () => {
@@ -112,13 +129,16 @@ const App = () => {
   }
 
   const fetchWeather = () => {
-    if (!onlyOneMatch) return
+    if (!country) return
 
-    const capital = matchingCountries[0].capital[0]
-    const countryCode = matchingCountries[0].cca2
-    const location = `${capital},${countryCode}`
+    const location = `${country.capital},${country.code}`
 
     weatherService.get(location).then((data) => {
+      if (!data) {
+        setWeather({})
+        return
+      }
+
       setWeather({
         city: data.name,
         temp: data.main.temp,
@@ -129,8 +149,31 @@ const App = () => {
     })
   }
 
+  // define side-effects
+
+  // fetch the full list of countries on initial render
   useEffect(fetchCountries, [])
-  useEffect(fetchWeather, [query])
+
+  // fetch the weather every time a new country is selected
+  useEffect(fetchWeather, [country])
+
+  // update the selected country when there's only one query match
+  useEffect(() => {
+    if (
+      matchingCountries?.length === 1 &&
+      matchingCountries[0].name.common !== country?.name
+    ) {
+      selectCountry(matchingCountries[0])
+    }
+  }, [matchingCountries])
+
+  // define helper variables for conditional rendering
+  let tooManyMatches, tenOrLessMatches
+  if (countries) {
+    tooManyMatches = query !== '' && matchingCountries.length > 10
+    tenOrLessMatches =
+      matchingCountries.length <= 10 && matchingCountries.length > 1
+  }
 
   return countries ? (
     <div>
@@ -138,22 +181,19 @@ const App = () => {
 
       {tooManyMatches ? (
         <div>Too many matches, specify another filter</div>
+      ) : country && isShown ? (
+        <Country
+          name={country.name}
+          capital={country.capital}
+          area={country.area}
+          languages={country.languages}
+          flag={country.flag}
+          weather={weather}
+        />
       ) : tenOrLessMatches ? (
         <SearchResults
           countries={matchingCountries.map(({ name }) => name.common)}
           showCountry={showCountry}
-        />
-      ) : onlyOneMatch ? (
-        <Country
-          name={matchingCountries[0].name.common}
-          capital={matchingCountries[0].capital[0]}
-          area={matchingCountries[0].area}
-          languages={Object.values(matchingCountries[0].languages)}
-          flag={{
-            img: matchingCountries[0].flags.png,
-            alt: matchingCountries[0].flags.alt,
-          }}
-          weather={weather}
         />
       ) : null}
     </div>
