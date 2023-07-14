@@ -104,13 +104,12 @@ const App = () => {
     const newPerson = {
       name: newName,
       number: newNumber,
-      id: persons.length + 1,
     }
 
     // save new contact to the backend server
     phonebookService.create(newPerson).then((returnedPerson) => {
       // update state
-      setPersons(persons.concat(newPerson))
+      setPersons(persons.concat(returnedPerson))
       // clear input fields to prepare for new input
       setNewName('')
       setNewNumber('')
