@@ -59,10 +59,16 @@ app.get('/api/info', (request, response) => {
   })
 })
 
-app.get('/api/persons/:id', (request, response) => {
-  Person.findById(request.params.id).then((person) => {
-    response.json(person)
-  })
+app.get('/api/persons/:id', (request, response, next) => {
+  Person.findById(request.params.id)
+    .then((person) => {
+      if (person) {
+        response.json(person)
+      } else {
+        response.status(404).end()
+      }
+    })
+    .catch((error) => next(error))
 })
 
 app.delete('/api/persons/:id', (request, response, next) => {
@@ -80,15 +86,27 @@ app.post('/api/persons', (request, response) => {
     return response.status(400).json({ error: 'name or number is missing' })
   }
 
-  // if (persons.map((p) => p.name).includes(name)) {
-  //   return response.status(400).json({ error: 'name must be unique' })
-  // }
-
   const person = new Person({ name, number })
 
   person.save().then((savedPerson) => {
     response.json(savedPerson)
   })
+})
+
+app.put('/api/persons/:id', (request, response, next) => {
+  const { name, number } = request.body
+
+  if (!name || !number) {
+    return response.status(400).json({ error: 'name or number is missing' })
+  }
+
+  const person = { name, number }
+
+  Person.findByIdAndUpdate(request.params.id, person, { new: true })
+    .then((updatedPerson) => {
+      response.json(updatedPerson)
+    })
+    .catch((error) => next(error))
 })
 
 const errorHandler = (error, request, response, next) => {
