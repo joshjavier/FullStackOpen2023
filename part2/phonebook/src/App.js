@@ -118,7 +118,7 @@ const App = () => {
   }
 
   const deletePerson = (e) => {
-    const id = parseInt(e.target.parentElement.dataset.id)
+    const id = e.target.parentElement.dataset.id
     const contact = persons.find((person) => person.id === id)
 
     if (window.confirm(`Delete ${contact.name}?`)) {
