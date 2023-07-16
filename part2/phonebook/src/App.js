@@ -21,6 +21,7 @@ const PersonForm = ({ newName, newNumber, handleChange, addPerson }) => {
             value={newName}
             onChange={handleChange}
             name="name"
+            placeholder="Bruce Lee"
           />
         </label>
       </div>
@@ -32,6 +33,7 @@ const PersonForm = ({ newName, newNumber, handleChange, addPerson }) => {
             value={newNumber}
             onChange={handleChange}
             name="number"
+            placeholder="123-4567"
           />
         </label>
       </div>

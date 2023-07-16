@@ -81,7 +81,13 @@ app.put('/api/persons/:id', (request, response, next) => {
     { new: true, runValidators: true, context: 'query' }
   )
     .then((updatedPerson) => {
-      response.json(updatedPerson)
+      if (updatedPerson) {
+        response.json(updatedPerson)
+      } else {
+        response.status(404).json({
+          error: 'no matching database entry',
+        })
+      }
     })
     .catch((error) => next(error))
 })

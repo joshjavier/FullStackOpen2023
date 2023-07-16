@@ -18,10 +18,15 @@ mongoose
 const personSchema = new mongoose.Schema({
   name: {
     type: String,
-    minLength: 3,
+    minLength: [3, 'must be at least 3 characters'],
     required: true,
   },
-  number: String,
+  number: {
+    type: String,
+    minLength: [8, 'must be at least 8 characters (incl. hyphen)'],
+    match: [/\d{2,3}-\d+/, 'must use the format 000-0000'],
+    required: true,
+  },
 })
 
 personSchema.set('toJSON', {
