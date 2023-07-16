@@ -6,39 +6,19 @@ const Person = require('./models/person')
 
 const app = express()
 
-app.use(express.json())
-
-// define a token for logging request data
-morgan.token('data', (req, res) => JSON.stringify(req.body))
-app.use(
-  morgan(':method :url :status :res[content-length] - :response-time ms :data')
-)
-
 // serve the phonebook frontend from part2
 app.use(express.static('build'))
 
-let persons = [
-  {
-    id: 1,
-    name: 'Arto Hellas',
-    number: '040-123456',
-  },
-  {
-    id: 2,
-    name: 'Ada Lovelace',
-    number: '39-44-5323523',
-  },
-  {
-    id: 3,
-    name: 'Dan Abramov',
-    number: '12-43-234345',
-  },
-  {
-    id: 4,
-    name: 'Mary Poppendieck',
-    number: '39-23-6423122',
-  },
-]
+app.use(express.json())
+
+const requestLogger = (() => {
+  morgan.token('data', (req, res) => JSON.stringify(req.body))
+  return morgan(
+    ':method :url :status :res[content-length] - :response-time ms :data'
+  )
+})()
+
+app.use(requestLogger)
 
 app.get('/', (request, response) => {
   response.send('<h1>Phonebook</h1>')
