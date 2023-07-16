@@ -107,14 +107,19 @@ const App = () => {
     }
 
     // save new contact to the backend server
-    phonebookService.create(newPerson).then((returnedPerson) => {
-      // update state
-      setPersons(persons.concat(returnedPerson))
-      // clear input fields to prepare for new input
-      setNewName('')
-      setNewNumber('')
-      showAlert(`Added ${returnedPerson.name}`)
-    })
+    phonebookService
+      .create(newPerson)
+      .then((returnedPerson) => {
+        // update state
+        setPersons(persons.concat(returnedPerson))
+        // clear input fields to prepare for new input
+        setNewName('')
+        setNewNumber('')
+        showAlert(`Added ${returnedPerson.name}`)
+      })
+      .catch((error) => {
+        showAlert(error.response.data.error, 'error')
+      })
   }
 
   const deletePerson = (e) => {
@@ -149,10 +154,14 @@ const App = () => {
           showAlert(`Updated ${returnedPerson.name}'s number`)
         })
         .catch((error) => {
+          let errorMsg
           if (error.response.statusText === 'Not Found') {
-            const errorMsg = `Information of ${person.name} has already been removed from the server`
-            showAlert(errorMsg, 'error')
+            errorMsg = `Information of ${person.name} has already been removed from the server`
+          } else if (error.response.statusText === 'Bad Request') {
+            errorMsg = error.response.data.error
           }
+
+          showAlert(errorMsg, 'error')
         })
     }
   }
