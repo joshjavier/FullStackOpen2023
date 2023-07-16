@@ -12,7 +12,7 @@ app.use(express.static('build'))
 app.use(express.json())
 
 const requestLogger = (() => {
-  morgan.token('data', (req, res) => JSON.stringify(req.body))
+  morgan.token('data', (req) => JSON.stringify(req.body))
   return morgan(
     ':method :url :status :res[content-length] - :response-time ms :data'
   )
@@ -53,7 +53,7 @@ app.get('/api/persons/:id', (request, response, next) => {
 
 app.delete('/api/persons/:id', (request, response, next) => {
   Person.findByIdAndRemove(request.params.id)
-    .then((result) => {
+    .then(() => {
       response.status(204).end()
     })
     .catch((error) => next(error))
@@ -78,7 +78,7 @@ app.put('/api/persons/:id', (request, response, next) => {
   Person.findByIdAndUpdate(
     request.params.id,
     { name, number },
-    { new: true, runValidators: true, context: 'query' }
+    { new: true, runValidators: true, context: 'query' },
   )
     .then((updatedPerson) => {
       if (updatedPerson) {
