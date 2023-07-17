@@ -29,6 +29,28 @@ test('unique identifier property of blog posts is named `id`', async () => {
   return blogs.every((blog) => expect(blog).toHaveProperty('id'))
 })
 
+test('new blogs can be created via HTTP POST request', async () => {
+  const newBlog = {
+    title: 'A Firefox-only minimap',
+    author: 'Stefan Judis',
+    url: 'https://www.stefanjudis.com/a-firefox-only-minimap/',
+    likes: 487,
+  }
+
+  const response = await api.post('/api/blogs').send(newBlog)
+
+  expect(response.status).toEqual(201)
+  expect(response.headers['content-type']).toMatch(/application\/json/)
+
+  expect(response.body).toHaveProperty('title', newBlog.title)
+  expect(response.body).toHaveProperty('author', newBlog.author)
+  expect(response.body).toHaveProperty('url', newBlog.url)
+  expect(response.body).toHaveProperty('likes', newBlog.likes)
+
+  const blogsAtEnd = await helper.blogsInDb()
+  expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length + 1)
+})
+
 afterAll(async () => {
   await mongoose.connection.close()
 })
