@@ -1,22 +1,15 @@
 const mongoose = require('mongoose')
 const supertest = require('supertest')
+const helper = require('./test_helper')
 const app = require('../app')
 const Blog = require('../models/blog')
-const { blogs } = require('./blogs_for_test')
 
 const api = supertest(app)
-
-const initialBlogs = blogs.map((blog) => ({
-  title: blog.title,
-  author: blog.author,
-  url: blog.url,
-  likes: blog.likes,
-}))
 
 beforeEach(async () => {
   await Blog.deleteMany({})
 
-  const blogObjects = initialBlogs.map((blogObj) => new Blog(blogObj))
+  const blogObjects = helper.initialBlogs.map((blogObj) => new Blog(blogObj))
   const promiseArray = blogObjects.map((blog) => blog.save())
 
   await Promise.all(promiseArray)
@@ -27,7 +20,13 @@ test('all blogs are returned in JSON format', async () => {
 
   expect(response.headers['content-type']).toMatch(/application\/json/)
   expect(response.status).toEqual(200)
-  expect(response.body).toHaveLength(initialBlogs.length)
+  expect(response.body).toHaveLength(helper.initialBlogs.length)
+})
+
+test('unique identifier property of blog posts is named `id`', async () => {
+  const blogs = await helper.blogsInDb()
+
+  return blogs.every((blog) => expect(blog).toHaveProperty('id'))
 })
 
 afterAll(async () => {
