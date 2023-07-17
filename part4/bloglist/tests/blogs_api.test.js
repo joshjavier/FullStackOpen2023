@@ -51,6 +51,20 @@ test('new blogs can be created via HTTP POST request', async () => {
   expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length + 1)
 })
 
+test('if new blog has no `likes` property, set the value to 0', async () => {
+  const blogWithMissingLikes = {
+    title: 'The Laptop to Buy',
+    author: 'Andrew Brossia',
+    url: 'https://blog.brossia.com/posts/the_laptop_to_buy/',
+  }
+
+  const response = await api.post('/api/blogs').send(blogWithMissingLikes)
+
+  expect(response.status).toEqual(201)
+  expect(response.headers['content-type']).toMatch(/application\/json/)
+  expect(response.body).toHaveProperty('likes', 0)
+})
+
 afterAll(async () => {
   await mongoose.connection.close()
 })
