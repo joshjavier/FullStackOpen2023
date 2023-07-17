@@ -65,6 +65,30 @@ test('if new blog has no `likes` property, set the value to 0', async () => {
   expect(response.body).toHaveProperty('likes', 0)
 })
 
+test('if new blog has no title, respond with status code 400', async () => {
+  const blogWithMissingTitle = {
+    author: 'Marin Cogan',
+    url: 'https://www.vox.com/23712664/parking-lots-urban-planning-cities-housing',
+    likes: 99,
+  }
+
+  const response = await api.post('/api/blogs').send(blogWithMissingTitle)
+
+  expect(response.status).toEqual(400)
+})
+
+test('if new blog has no url, respond with status code 400', async () => {
+  const blogWithMissingUrl = {
+    title: '‘The Man Who Organized Nature’ Review: Linnaeus the Namer',
+    author: 'Christoph Irmscher',
+    likes: 10,
+  }
+
+  const response = await api.post('/api/blogs').send(blogWithMissingUrl)
+
+  expect(response.status).toEqual(400)
+})
+
 afterAll(async () => {
   await mongoose.connection.close()
 })
