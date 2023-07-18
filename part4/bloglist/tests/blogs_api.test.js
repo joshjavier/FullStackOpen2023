@@ -116,6 +116,69 @@ describe('deleting a blog', () => {
   })
 })
 
+describe('updating a blog', () => {
+  test("doesn't change the length of the database", async () => {
+    const blogsAtStart = await helper.blogsInDb()
+    const id = blogsAtStart[4].id
+
+    const updatedProps = { title: 'TDD Harms Architecture' }
+
+    await api
+      .put(`/api/blogs/${id}`)
+      .send(updatedProps)
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+
+    const blogsAtEnd = await helper.blogsInDb()
+    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
+  })
+
+  test('succeeds when changing title and author with a valid string', async () => {
+    const blogsAtStart = await helper.blogsInDb()
+    const id = blogsAtStart[4].id
+
+    const updatedProps = {
+      title: 'TDD Harms Architecture',
+      author: 'Uncle Bob',
+    }
+
+    const response = await api.put(`/api/blogs/${id}`).send(updatedProps)
+
+    expect(response.status).toEqual(200)
+    expect(response.headers['content-type']).toMatch(/application\/json/)
+
+    expect(response.body).toHaveProperty('id', id)
+    expect(response.body).toHaveProperty('title', 'TDD Harms Architecture')
+    expect(response.body).toHaveProperty('author', 'Uncle Bob')
+  })
+
+  test('succeeds when updating the number of likes', async () => {
+    const blogsAtStart = await helper.blogsInDb()
+    const blog = blogsAtStart[4]
+
+    const updatedProps = { likes: blog.likes + 1 }
+
+    const response = await api.put(`/api/blogs/${blog.id}`).send(updatedProps)
+
+    expect(response.status).toEqual(200)
+    expect(response.headers['content-type']).toMatch(/application\/json/)
+
+    expect(response.body).toHaveProperty('id', blog.id)
+    expect(response.body).toHaveProperty('title', blog.title)
+    expect(response.body).toHaveProperty('author', blog.author)
+    expect(response.body).toHaveProperty('likes', updatedProps.likes)
+  })
+
+  test('fails if data is missing title or url', async () => {
+    const blogsAtStart = await helper.blogsInDb()
+    const id = blogsAtStart[4].id
+
+    const updatedProps = { url: '' }
+
+    await api.put(`/api/blogs/${id}`).send(updatedProps).expect(400)
+  })
+})
+
 afterAll(async () => {
   await mongoose.connection.close()
 })
