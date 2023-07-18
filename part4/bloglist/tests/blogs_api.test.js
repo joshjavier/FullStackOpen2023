@@ -80,9 +80,7 @@ describe('adding a new blog', () => {
       likes: 99,
     }
 
-    const response = await api.post('/api/blogs').send(blogWithMissingTitle)
-
-    expect(response.status).toEqual(400)
+    await api.post('/api/blogs').send(blogWithMissingTitle).expect(400)
   })
 
   test('fails if the `url` prop is mising', async () => {
@@ -92,9 +90,7 @@ describe('adding a new blog', () => {
       likes: 10,
     }
 
-    const response = await api.post('/api/blogs').send(blogWithMissingUrl)
-
-    expect(response.status).toEqual(400)
+    await api.post('/api/blogs').send(blogWithMissingUrl).expect(400)
   })
 })
 
@@ -106,7 +102,7 @@ describe('deleting a blog', () => {
     await api.delete(`/api/blogs/${validId}`).expect(204)
 
     const blogsAtEnd = await helper.blogsInDb()
-    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length - 1)
+    expect(blogsAtEnd).toHaveLength(blogsAtStart.length - 1)
   })
 
   test("returns 204 if id is valid and currently doesn't exist", async () => {
@@ -130,7 +126,7 @@ describe('updating a blog', () => {
       .expect('Content-Type', /application\/json/)
 
     const blogsAtEnd = await helper.blogsInDb()
-    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
+    expect(blogsAtEnd).toHaveLength(blogsAtStart.length)
   })
 
   test('succeeds when changing title and author with a valid string', async () => {
