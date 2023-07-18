@@ -9,11 +9,11 @@ const initialBlogs = blogs.map((blog) => ({
 }))
 
 const nonExistingId = async () => {
-  const blog = new Blog({ name: 'willremovethissoon' })
+  const blog = new Blog({ title: 'willremovethissoon', url: 'doesntmatter' })
   await blog.save()
   await blog.deleteOne()
 
-  return blog._id.toString()
+  return blog.id
 }
 
 const blogsInDb = async () => {
