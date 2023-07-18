@@ -59,6 +59,24 @@ describe('adding a new blog', () => {
     expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length + 1)
   })
 
+  test('succeeds even if author is missing', async () => {
+    const blogsAtStart = await helper.blogsInDb()
+
+    const newBlog = {
+      title: 'Untitled blog',
+      url: 'https://www.untitledblog.co.uk/',
+    }
+
+    const response = await api.post('/api/blogs').send(newBlog)
+
+    expect(response.status).toEqual(201)
+    expect(response.headers['content-type']).toMatch(/application\/json/)
+    expect(response.body).not.toHaveProperty('author')
+
+    const blogsAtEnd = await helper.blogsInDb()
+    expect(blogsAtEnd).toHaveLength(blogsAtStart.length + 1)
+  })
+
   test('without the `likes` prop will have it initially set to 0', async () => {
     const blogWithMissingLikes = {
       title: 'The Laptop to Buy',
