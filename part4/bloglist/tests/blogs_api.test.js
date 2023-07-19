@@ -154,20 +154,60 @@ describe('adding a new blog', () => {
 })
 
 describe('deleting a blog', () => {
-  test('succeeds if id is valid and currently exists', async () => {
-    const blogsAtStart = await helper.blogsInDb()
-    const validId = blogsAtStart[0].id
+  beforeEach(async () => {
+    // create a test blog with an authenticated user
+    const blog = {
+      title: 'tobedeleted',
+      author: 'unknown',
+      url: 'https://thevoid.com',
+    }
+    await api
+      .post('/api/blogs')
+      .auth(token, { type: 'bearer' })
+      .send(blog)
+      .expect(201)
+  })
 
-    await api.delete(`/api/blogs/${validId}`).expect(204)
+  test('succeeds if blog exists and is created by authenticated user', async () => {
+    const blogsAtStart = await helper.blogsInDb()
+    const existingId = blogsAtStart[blogsAtStart.length - 1].id
+
+    await api
+      .delete(`/api/blogs/${existingId}`)
+      .auth(token, { type: 'bearer' })
+      .expect(204)
 
     const blogsAtEnd = await helper.blogsInDb()
     expect(blogsAtEnd).toHaveLength(blogsAtStart.length - 1)
   })
 
-  test("returns 204 if id is valid and currently doesn't exist", async () => {
+  test("fails with 404 if blog doesn't exist in db", async () => {
     const nonExistingId = await helper.nonExistingId()
 
-    await api.delete(`/api/blogs/${nonExistingId}`).expect(204)
+    await api
+      .delete(`/api/blogs/${nonExistingId}`)
+      .auth(token, { type: 'bearer' })
+      .expect(404)
+  })
+
+  test("fails with 403 if blog isn't created by the authenticated user", async () => {
+    const blogsAtStart = await helper.blogsInDb()
+    const blogWithNoUserProp = blogsAtStart[0]
+
+    await api
+      .delete(`/api/blogs/${blogWithNoUserProp.id}`)
+      .auth(token, { type: 'bearer' })
+      .expect(403)
+
+    const blogsAtEnd = await helper.blogsInDb()
+    expect(blogsAtEnd).toHaveLength(blogsAtStart.length)
+  })
+
+  test('fails with 401 if the user is not authenticated', async () => {
+    const blogsAtStart = await helper.blogsInDb()
+    const existingId = blogsAtStart[blogsAtStart.length - 1].id
+
+    await api.delete(`/api/blogs/${existingId}`).expect(401)
   })
 })
 
