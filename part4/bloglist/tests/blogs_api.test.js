@@ -3,8 +3,28 @@ const supertest = require('supertest')
 const helper = require('./test_helper')
 const app = require('../app')
 const Blog = require('../models/blog')
+const User = require('../models/user')
+const bcrypt = require('bcrypt')
 
 const api = supertest(app)
+
+let token
+
+beforeAll(async () => {
+  await User.deleteMany({})
+
+  // create a test user
+  const username = 'test'
+  const password = 'welcome123'
+  const passwordHash = await bcrypt.hash(password, 10)
+  const user = new User({ username, passwordHash })
+  await user.save()
+
+  // get a valid auth token
+  const login = { username, password }
+  const response = await api.post('/api/login').send(login)
+  token = response.body.token
+}, 10000)
 
 beforeEach(async () => {
   await Blog.deleteMany({})
@@ -37,23 +57,49 @@ describe('when there are initially some notes saved', () => {
 })
 
 describe('adding a new blog', () => {
-  test('succeeds with valid data', async () => {
-    const newBlog = {
-      title: 'A Firefox-only minimap',
-      author: 'Stefan Judis',
-      url: 'https://www.stefanjudis.com/a-firefox-only-minimap/',
-      likes: 487,
-    }
+  const blogWithValidData = {
+    title: 'A Firefox-only minimap',
+    author: 'Stefan Judis',
+    url: 'https://www.stefanjudis.com/a-firefox-only-minimap/',
+    likes: 487,
+  }
 
-    const response = await api.post('/api/blogs').send(newBlog)
+  const blogWithMissingAuthor = {
+    title: 'Untitled blog',
+    url: 'https://www.untitledblog.co.uk/',
+  }
+
+  const blogWithMissingLikes = {
+    title: 'The Laptop to Buy',
+    author: 'Andrew Brossia',
+    url: 'https://blog.brossia.com/posts/the_laptop_to_buy/',
+  }
+
+  const blogWithMissingTitle = {
+    author: 'Marin Cogan',
+    url: 'https://www.vox.com/23712664/parking-lots-urban-planning-cities-housing',
+    likes: 99,
+  }
+
+  const blogWithMissingUrl = {
+    title: '‘The Man Who Organized Nature’ Review: Linnaeus the Namer',
+    author: 'Christoph Irmscher',
+    likes: 10,
+  }
+
+  test('succeeds with valid data', async () => {
+    const response = await api
+      .post('/api/blogs')
+      .auth(token, { type: 'bearer' })
+      .send(blogWithValidData)
 
     expect(response.status).toEqual(201)
     expect(response.headers['content-type']).toMatch(/application\/json/)
 
-    expect(response.body).toHaveProperty('title', newBlog.title)
-    expect(response.body).toHaveProperty('author', newBlog.author)
-    expect(response.body).toHaveProperty('url', newBlog.url)
-    expect(response.body).toHaveProperty('likes', newBlog.likes)
+    expect(response.body).toHaveProperty('title', blogWithValidData.title)
+    expect(response.body).toHaveProperty('author', blogWithValidData.author)
+    expect(response.body).toHaveProperty('url', blogWithValidData.url)
+    expect(response.body).toHaveProperty('likes', blogWithValidData.likes)
 
     const blogsAtEnd = await helper.blogsInDb()
     expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length + 1)
@@ -62,12 +108,10 @@ describe('adding a new blog', () => {
   test('succeeds even if author is missing', async () => {
     const blogsAtStart = await helper.blogsInDb()
 
-    const newBlog = {
-      title: 'Untitled blog',
-      url: 'https://www.untitledblog.co.uk/',
-    }
-
-    const response = await api.post('/api/blogs').send(newBlog)
+    const response = await api
+      .post('/api/blogs')
+      .auth(token, { type: 'bearer' })
+      .send(blogWithMissingAuthor)
 
     expect(response.status).toEqual(201)
     expect(response.headers['content-type']).toMatch(/application\/json/)
@@ -77,38 +121,35 @@ describe('adding a new blog', () => {
     expect(blogsAtEnd).toHaveLength(blogsAtStart.length + 1)
   })
 
-  test('without the `likes` prop will have it initially set to 0', async () => {
-    const blogWithMissingLikes = {
-      title: 'The Laptop to Buy',
-      author: 'Andrew Brossia',
-      url: 'https://blog.brossia.com/posts/the_laptop_to_buy/',
-    }
-
-    const response = await api.post('/api/blogs').send(blogWithMissingLikes)
+  test('without likes will have it initially set to 0', async () => {
+    const response = await api
+      .post('/api/blogs')
+      .auth(token, { type: 'bearer' })
+      .send(blogWithMissingLikes)
 
     expect(response.status).toEqual(201)
     expect(response.headers['content-type']).toMatch(/application\/json/)
     expect(response.body).toHaveProperty('likes', 0)
   })
 
-  test('fails if the `title` prop is missing', async () => {
-    const blogWithMissingTitle = {
-      author: 'Marin Cogan',
-      url: 'https://www.vox.com/23712664/parking-lots-urban-planning-cities-housing',
-      likes: 99,
-    }
-
-    await api.post('/api/blogs').send(blogWithMissingTitle).expect(400)
+  test('fails if title is missing', async () => {
+    await api
+      .post('/api/blogs')
+      .auth(token, { type: 'bearer' })
+      .send(blogWithMissingTitle)
+      .expect(400)
   })
 
-  test('fails if the `url` prop is mising', async () => {
-    const blogWithMissingUrl = {
-      title: '‘The Man Who Organized Nature’ Review: Linnaeus the Namer',
-      author: 'Christoph Irmscher',
-      likes: 10,
-    }
+  test('fails if url is mising', async () => {
+    await api
+      .post('/api/blogs')
+      .auth(token, { type: 'bearer' })
+      .send(blogWithMissingUrl)
+      .expect(400)
+  })
 
-    await api.post('/api/blogs').send(blogWithMissingUrl).expect(400)
+  test('fails if token is invalid or missing', async () => {
+    await api.post('/api/blogs').send(blogWithValidData).expect(401)
   })
 })
 
