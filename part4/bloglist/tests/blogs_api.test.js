@@ -148,7 +148,7 @@ describe('adding a new blog', () => {
       .expect(400)
   })
 
-  test('fails if token is invalid or missing', async () => {
+  test('fails with 401 if token is invalid or missing', async () => {
     await api.post('/api/blogs').send(blogWithValidData).expect(401)
   })
 })
