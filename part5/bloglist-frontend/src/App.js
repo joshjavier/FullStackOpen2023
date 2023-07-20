@@ -31,11 +31,61 @@ const LoginForm = ({ username, password, handleLogin, handleChange }) => {
   )
 }
 
+const CreateBlogForm = ({
+  title,
+  author,
+  url,
+  handleChange,
+  handleCreateBlog,
+}) => {
+  return (
+    <div>
+      <h2>create a new blog</h2>
+      <form onSubmit={handleCreateBlog}>
+        <div>
+          <label htmlFor="blog-title">title:</label>
+          <input
+            type="text"
+            id="blog-title"
+            name="title"
+            value={title}
+            onChange={handleChange('title')}
+          />
+        </div>
+        <div>
+          <label htmlFor="blog-author">author:</label>
+          <input
+            type="text"
+            id="blog-author"
+            name="author"
+            value={author}
+            onChange={handleChange('author')}
+          />
+        </div>
+        <div>
+          <label htmlFor="blog-url">url:</label>
+          <input
+            type="text"
+            id="blog-url"
+            name="url"
+            value={url}
+            onChange={handleChange('url')}
+          />
+        </div>
+        <button>create</button>
+      </form>
+    </div>
+  )
+}
+
 const App = () => {
   const [blogs, setBlogs] = useState([])
   const [user, setUser] = useState(null)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [title, setTitle] = useState('')
+  const [author, setAuthor] = useState('')
+  const [url, setUrl] = useState('')
   const [errorMessage, setErrorMessage] = useState(null)
 
   const handleChange = (state) => (e) => {
@@ -45,6 +95,18 @@ const App = () => {
 
     if (state === 'password') {
       setPassword(e.target.value)
+    }
+
+    if (state === 'title') {
+      setTitle(e.target.value)
+    }
+
+    if (state === 'author') {
+      setAuthor(e.target.value)
+    }
+
+    if (state === 'url') {
+      setUrl(e.target.value)
     }
   }
 
@@ -72,6 +134,26 @@ const App = () => {
   const handleLogout = () => {
     window.localStorage.removeItem('loggedUser')
     setUser(null)
+  }
+
+  const handleCreateBlog = async (e) => {
+    e.preventDefault()
+
+    try {
+      const newBlog = await blogService.create({ title, author, url })
+      const updatedBlogs = blogs.concat(newBlog)
+      setBlogs(updatedBlogs)
+
+      // clear form fields
+      setTitle('')
+      setAuthor('')
+      setUrl('')
+    } catch (error) {
+      setErrorMessage(error.response.data.error)
+      setTimeout(() => {
+        setErrorMessage(null)
+      }, 5000)
+    }
   }
 
   useEffect(() => {
@@ -103,6 +185,15 @@ const App = () => {
             Konnichiwa, {user.name}! You are now logged in.{' '}
             <button onClick={handleLogout}>log out</button>
           </p>
+
+          <CreateBlogForm
+            title={title}
+            author={author}
+            url={url}
+            handleChange={handleChange}
+            handleCreateBlog={handleCreateBlog}
+          />
+
           <ul>
             {blogs.map((blog) => (
               <li key={blog.id}>
