@@ -23,3 +23,12 @@
   color: firebrick;
   background-color: lightpink;
 }
+
+.blog-item .details {
+  margin-bottom: 1em;
+  padding-left: 1em;
+}
+
+.blog-item p {
+  margin-block: 0;
+}
