@@ -78,6 +78,19 @@ const CreateBlogForm = ({
   )
 }
 
+const Notification = ({ message, type }) => {
+  return (
+    <div
+      id="notification"
+      className="notification"
+      data-type={type}
+      role="alert"
+    >
+      {message}
+    </div>
+  )
+}
+
 const App = () => {
   const [blogs, setBlogs] = useState([])
   const [user, setUser] = useState(null)
@@ -86,7 +99,7 @@ const App = () => {
   const [title, setTitle] = useState('')
   const [author, setAuthor] = useState('')
   const [url, setUrl] = useState('')
-  const [errorMessage, setErrorMessage] = useState(null)
+  const [alert, setAlert] = useState(null)
 
   const handleChange = (state) => (e) => {
     if (state === 'username') {
@@ -123,17 +136,17 @@ const App = () => {
       // clear the login form fields
       setUsername('')
       setPassword('')
+
+      showAlert('You are now logged in!')
     } catch (error) {
-      setErrorMessage('Wrong credentials')
-      setTimeout(() => {
-        setErrorMessage(null)
-      }, 5000)
+      showAlert(error.response.data.error, 'error')
     }
   }
 
   const handleLogout = () => {
     window.localStorage.removeItem('loggedUser')
     setUser(null)
+    showAlert('You have been logged out. Thanks for using this app!')
   }
 
   const handleCreateBlog = async (e) => {
@@ -148,12 +161,20 @@ const App = () => {
       setTitle('')
       setAuthor('')
       setUrl('')
+
+      showAlert(
+        `added a new blog: ${newBlog.title}${
+          newBlog.author && ' by ' + newBlog.author
+        }`
+      )
     } catch (error) {
-      setErrorMessage(error.response.data.error)
-      setTimeout(() => {
-        setErrorMessage(null)
-      }, 5000)
+      showAlert(error.response.data.error, 'error')
     }
+  }
+
+  const showAlert = (message, type = 'success') => {
+    setAlert({ message, type })
+    setTimeout(() => setAlert(null), 5000)
   }
 
   useEffect(() => {
@@ -172,6 +193,8 @@ const App = () => {
     <div>
       <h1>blogs</h1>
 
+      <Notification message={alert?.message} type={alert?.type} />
+
       {!user ? (
         <LoginForm
           username={username}
@@ -182,7 +205,7 @@ const App = () => {
       ) : (
         <>
           <p>
-            Konnichiwa, {user.name}! You are now logged in.{' '}
+            Konnichiwa, {user.name}!{' '}
             <button onClick={handleLogout}>log out</button>
           </p>
 
