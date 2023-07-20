@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Blog from './components/Blog'
 import LoginForm from './components/LoginForm'
 import BlogForm from './components/BlogForm'
 import Notification from './components/Notification'
+import Toggleable from './components/Toggleable'
 import blogService from './services/blogs'
 import loginService from './services/login'
 
@@ -10,6 +11,7 @@ const App = () => {
   const [blogs, setBlogs] = useState([])
   const [user, setUser] = useState(null)
   const [alert, setAlert] = useState(null)
+  const blogFormRef = useRef()
 
   const login = (credentials) => {
     const { username, password } = credentials
@@ -45,6 +47,7 @@ const App = () => {
       .then((newBlog) => {
         const updatedBlogs = blogs.concat(newBlog)
         setBlogs(updatedBlogs)
+        blogFormRef.current.hideComponent()
 
         showAlert(
           `added a new blog: ${newBlog.title}${
@@ -89,7 +92,9 @@ const App = () => {
             <button onClick={handleLogout}>log out</button>
           </p>
 
-          <BlogForm addBlog={addBlog} />
+          <Toggleable buttonLabel="new blog" ref={blogFormRef}>
+            <BlogForm addBlog={addBlog} />
+          </Toggleable>
 
           <ul>
             {blogs.map((blog) => (
