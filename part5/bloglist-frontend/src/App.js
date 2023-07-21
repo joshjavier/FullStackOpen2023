@@ -60,6 +60,21 @@ const App = () => {
       })
   }
 
+  const incrementLikes = (blog) => () => {
+    const likes = blog.likes + 1
+    blogService
+      .update(blog.id, { likes })
+      .then((updatedBlog) => {
+        const updatedBlogs = blogs.map((blog) =>
+          blog.id === updatedBlog.id ? updatedBlog : blog
+        )
+        setBlogs(updatedBlogs)
+      })
+      .catch((error) => {
+        showAlert(error.response.data.error, 'error')
+      })
+  }
+
   const showAlert = (message, type = 'success') => {
     setAlert({ message, type })
     setTimeout(() => setAlert(null), 5000)
@@ -99,7 +114,7 @@ const App = () => {
           <ul>
             {blogs.map((blog) => (
               <li key={blog.id}>
-                <Blog blog={blog} />
+                <Blog blog={blog} incrementLikes={incrementLikes} />
               </li>
             ))}
           </ul>

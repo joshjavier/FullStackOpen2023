@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
-const Blog = ({ blog: { title, author, url, likes, user } }) => {
+const Blog = ({ blog, incrementLikes }) => {
+  const { title, author, url, likes, user } = blog
   const [hidden, setHidden] = useState(true)
 
   const toggle = () => {
@@ -21,7 +22,8 @@ const Blog = ({ blog: { title, author, url, likes, user } }) => {
           <a href={url}>🔗 {url}</a>
         </p>
         <p>
-          <span>❤️ likes: {likes}</span> <button>like</button>
+          <span>❤️ likes: {likes}</span>{' '}
+          <button onClick={incrementLikes(blog)}>like</button>
         </p>
         {user && <p>👤 {user?.name || user.username}</p>}
       </div>
