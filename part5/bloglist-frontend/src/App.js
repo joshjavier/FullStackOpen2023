@@ -89,7 +89,11 @@ const App = () => {
       blogService.setToken(user.token)
     }
 
-    blogService.getAll().then((blogs) => setBlogs(blogs))
+    blogService.getAll().then((blogs) => {
+      const byLikesDesc = (a, b) => b.likes - a.likes
+      blogs.sort(byLikesDesc)
+      setBlogs(blogs)
+    })
   }, [])
 
   return (
