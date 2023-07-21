@@ -75,6 +75,24 @@ const App = () => {
       })
   }
 
+  const deleteBlog = (blog) => {
+    blogService
+      .remove(blog.id)
+      .then(() => {
+        const updatedBlogs = blogs.filter(({ id }) => id !== blog.id)
+        setBlogs(updatedBlogs)
+
+        showAlert(
+          `removed blog: ${blog.title}${
+            blog.author ? ' by ' + blog.author : ''
+          }`
+        )
+      })
+      .catch((error) => {
+        showAlert(error.response.data.error, 'error')
+      })
+  }
+
   const showAlert = (message, type = 'success') => {
     setAlert({ message, type })
     setTimeout(() => setAlert(null), 5000)
@@ -118,7 +136,12 @@ const App = () => {
           <ul>
             {blogs.map((blog) => (
               <li key={blog.id}>
-                <Blog blog={blog} incrementLikes={incrementLikes} />
+                <Blog
+                  blog={blog}
+                  username={user.username}
+                  incrementLikes={incrementLikes}
+                  deleteBlog={deleteBlog}
+                />
               </li>
             ))}
           </ul>
