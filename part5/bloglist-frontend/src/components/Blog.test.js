@@ -37,4 +37,18 @@ describe('<Blog />', () => {
     expect(url).not.toBeVisible()
     expect(likes).not.toBeVisible()
   })
+
+  test('shows URL, likes, etc. when the view button is clicked', async () => {
+    const user = userEvent.setup()
+
+    renderComponent()
+
+    const viewButton = screen.getByText('view')
+    const url = screen.getByText('http', { exact: false })
+    const likes = screen.getByText('likes', { exact: false })
+    await user.click(viewButton)
+
+    expect(url).toBeVisible()
+    expect(likes).toBeVisible()
+  })
 })
