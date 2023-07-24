@@ -46,6 +46,6 @@ button:hover {
   padding-left: 1em;
 }
 
-.blog-item p {
+.blog-item .details > * {
   margin-block: 0;
 }
