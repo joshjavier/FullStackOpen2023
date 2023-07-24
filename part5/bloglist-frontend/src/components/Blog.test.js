@@ -51,4 +51,20 @@ describe('<Blog />', () => {
     expect(url).toBeVisible()
     expect(likes).toBeVisible()
   })
+
+  test('has a like button that can be clicked', async () => {
+    const user = userEvent.setup()
+
+    renderComponent()
+
+    const viewButton = screen.getByText('view')
+    const likeButton = screen.getByText('like')
+
+    // show the like button first
+    await user.click(viewButton)
+
+    await user.click(likeButton)
+    await user.click(likeButton)
+    expect(mockLiker.mock.calls).toHaveLength(2)
+  })
 })
